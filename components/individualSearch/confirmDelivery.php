@@ -180,7 +180,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Solo intentar enviar correo si hay email válido
             if (!empty($userEmail) && filter_var($userEmail, FILTER_VALIDATE_EMAIL)) {
                 // Preparar contenido del correo
-                $subject = "🎁 Regalo Entregado - Gift Flow";
+                $subject = "🎁 Regalo Entregado - Beneficios Amgigotex";
                 $isSamePerson = ($recipient_number_id == $user_number_id);
                 
                 if ($isSamePerson) {
@@ -283,7 +283,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             ]
                         ];
                         
-                        $mail->setFrom($config['email'], 'Gift Flow - Plataforma Beneficios');
+                        $mail->setFrom($config['email'], 'Amigotex - Plataforma Beneficios');
                         $mail->CharSet = 'UTF-8';
                         $mail->addAddress($userEmail);
                         $mail->isHTML(true);
