@@ -95,6 +95,9 @@ $logo = $company['logo'] ?? 'gf_header.png'; // Fallback si no hay logo
 
 <!-- Incluir SweetAlert2 si no está ya incluido -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
 <script>
     document.getElementById('btnAgregarSede').addEventListener('click', function(event) {
         event.preventDefault();
@@ -290,7 +293,7 @@ $logo = $company['logo'] ?? 'gf_header.png'; // Fallback si no hay logo
         
         Swal.fire({
             title: 'Exportando Matriz...',
-            text: 'Esto puede tomar unos momentos dependiendo de la cantidad de registros.',
+            text: 'Obteniendo datos y generando archivo Excel.',
             icon: 'info',
             allowOutsideClick: false,
             allowEscapeKey: false,
@@ -300,23 +303,127 @@ $logo = $company['logo'] ?? 'gf_header.png'; // Fallback si no hay logo
             }
         });
 
-        // Crear iframe oculto para la descarga
-        const iframe = document.createElement('iframe');
-        iframe.style.display = 'none';
-        iframe.src = 'components/individualSearch/exportar_matriz.php';
-        document.body.appendChild(iframe);
-
-        // Cerrar el Swal después de un tiempo razonable
-        setTimeout(() => {
-            document.body.removeChild(iframe);
-            Swal.fire({
-                title: '¡Exportación completada!',
-                text: 'El archivo Excel se está descargando.',
-                icon: 'success',
-                confirmButtonText: 'Entendido'
+        // Obtener datos via AJAX y generar Excel en el cliente
+        fetch('components/individualSearch/obtener_datos_matriz.php')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    generarExcelCliente(data.data);
+                    Swal.fire({
+                        title: '¡Exportación completada!',
+                        text: 'El archivo Excel se ha descargado exitosamente.',
+                        icon: 'success',
+                        confirmButtonText: 'Entendido'
+                    });
+                } else {
+                    Swal.fire('Error', data.message || 'Error al obtener los datos.', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire('Error', 'Error al procesar la solicitud.', 'error');
             });
-        }, 3000);
     });
+
+    function generarExcelCliente(datos) {
+        // Crear un nuevo libro de Excel
+        const wb = XLSX.utils.book_new();
+        
+        // Convertir datos JSON a hoja de trabajo
+        const ws = XLSX.utils.json_to_sheet(datos);
+        
+        // Configurar ancho de columnas automático
+        const colWidths = [];
+        if (datos.length > 0) {
+            Object.keys(datos[0]).forEach((key, index) => {
+                const maxLength = Math.max(
+                    key.length,
+                    ...datos.map(row => String(row[key] || '').length)
+                );
+                colWidths.push({ wch: Math.min(maxLength + 2, 50) }); // Máximo 50 caracteres
+            });
+            ws['!cols'] = colWidths;
+        }
+        
+        // Aplicar estilos mejorados a los encabezados con colores
+        const range = XLSX.utils.decode_range(ws['!ref']);
+        for (let col = range.s.c; col <= range.e.c; col++) {
+            const cellAddress = XLSX.utils.encode_cell({ r: 0, c: col });
+            if (!ws[cellAddress]) continue;
+            
+            ws[cellAddress].s = {
+                font: { 
+                    bold: true, 
+                    color: { rgb: "FFFFFF" },
+                    size: 12,
+                    name: "Arial"
+                },
+                fill: { 
+                    type: "pattern",
+                    pattern: "solid",
+                    fgColor: { rgb: "2E7D32" } // Verde oscuro más profesional
+                },
+                alignment: { 
+                    horizontal: "center", 
+                    vertical: "center",
+                    wrapText: true
+                },
+                border: {
+                    top: { style: "thin", color: { rgb: "000000" } },
+                    bottom: { style: "thin", color: { rgb: "000000" } },
+                    left: { style: "thin", color: { rgb: "000000" } },
+                    right: { style: "thin", color: { rgb: "000000" } }
+                }
+            };
+        }
+        
+        // Aplicar bordes a todas las celdas con datos
+        if (datos.length > 0) {
+            for (let row = range.s.r; row <= range.e.r; row++) {
+                for (let col = range.s.c; col <= range.e.c; col++) {
+                    const cellAddress = XLSX.utils.encode_cell({ r: row, c: col });
+                    if (!ws[cellAddress]) continue;
+                    
+                    // Solo aplicar bordes a celdas que no son encabezados
+                    if (row > 0) {
+                        ws[cellAddress].s = ws[cellAddress].s || {};
+                        ws[cellAddress].s.border = {
+                            top: { style: "thin", color: { rgb: "CCCCCC" } },
+                            bottom: { style: "thin", color: { rgb: "CCCCCC" } },
+                            left: { style: "thin", color: { rgb: "CCCCCC" } },
+                            right: { style: "thin", color: { rgb: "CCCCCC" } }
+                        };
+                        
+                        // Alternar colores de fila para mejor legibilidad
+                        if (row % 2 === 0) {
+                            ws[cellAddress].s.fill = {
+                                type: "pattern",
+                                pattern: "solid",
+                                fgColor: { rgb: "F8F9FA" } // Gris muy claro
+                            };
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Agregar hoja al libro
+        XLSX.utils.book_append_sheet(wb, ws, 'Matriz Completa Regalos');
+        
+        // Generar nombre del archivo con fecha y hora actual
+        const now = new Date();
+        const timestamp = now.getFullYear() + '-' + 
+                         String(now.getMonth() + 1).padStart(2, '0') + '-' + 
+                         String(now.getDate()).padStart(2, '0') + '_' + 
+                         String(now.getHours()).padStart(2, '0') + '-' + 
+                         String(now.getMinutes()).padStart(2, '0') + '-' + 
+                         String(now.getSeconds()).padStart(2, '0');
+        
+        const filename = `Matriz_Regalos_${timestamp}.xlsx`;
+    
+        // Descargar el archivo, habilitando la exportación de estilos
+        XLSX.writeFile(wb, filename, { cellStyles: true });
+    }
 
     // Funciones básicas para editar/eliminar (implementa en archivos PHP separados si es necesario)
     function editarSede(id) {

@@ -21,6 +21,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $direccion = $_POST['direccion'];
     $edad = intval($_POST['edad']);
 
+    // Verificar si el username ya existe
+    $checkStmt = $conn->prepare("SELECT username FROM users WHERE username = ?");
+    $checkStmt->bind_param("i", $username);
+    $checkStmt->execute();
+    $checkStmt->store_result();
+    if ($checkStmt->num_rows > 0) {
+        echo json_encode(['success' => false, 'message' => 'El usuario con esa cédula ya existe.']);
+        $checkStmt->close();
+        $conn->close();
+        exit;
+    }
+    $checkStmt->close();
+
     // Manejar subida de foto
     if (isset($_FILES['foto']) && $_FILES['foto']['error'] == 0) {
         $allowed = ['png', 'jpg', 'jpeg'];

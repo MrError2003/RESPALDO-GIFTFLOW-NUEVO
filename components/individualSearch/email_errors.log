@@ -14,3 +14,9 @@ proper dns entries.
 [2025-10-21 11:20:27] Correo enviado exitosamente a JUANDIDOC11@GMAIL.COM
 [2025-10-21 20:12:28] Correo enviado exitosamente a JUANDIDOC11@GMAIL.COM
 [2025-10-21 20:17:16] Correo enviado exitosamente a JUANDIDOC11@GMAIL.COM
+[2025-10-24 13:03:30] Error al enviar correo: SMTP Error: The following recipients failed: DOLORES@EJEMPLO.COM: The mail server could not deliver mail to dolores@ejemplo.com.  The account
+or domain may not exist, they may be blacklisted, or missing the proper dns
+entries.
+
+[2025-10-24 13:05:18] Correo enviado exitosamente a JUANDIDOC11@GMAIL.COM
+[2025-10-24 13:08:55] Correo enviado exitosamente a JUANDIDOC11@GMAIL.COM

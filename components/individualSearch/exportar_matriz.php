@@ -178,29 +178,38 @@ try {
     }
 
     // Ajustar ancho de columnas automáticamente
-    $lastColumnLetter = chr(65 + $lastColumn - 1); // Corregir el cálculo
+    $lastColumnLetter = chr(65 + $lastColumn - 1);
     foreach (range('A', $lastColumnLetter) as $col) {
         $sheet->getColumnDimension($col)->setAutoSize(true);
     }
 
-    // Formato para fechas
-    if ($row > 2) {
+    // Aplicar bordes a los títulos siempre (incluso sin datos)
+    $headerRange = 'A1:' . $lastColumnLetter . '1';
+    $borderStyle = [
+        'borders' => [
+            'allBorders' => [
+                'borderStyle' => Border::BORDER_THIN,
+                'color' => ['rgb' => '000000']
+            ]
+        ]
+    ];
+    $sheet->getStyle($headerRange)->applyFromArray($borderStyle);
+
+    // Si hay datos, aplicar formato adicional
+    if ($userCount > 0) {
+        // Formato para fechas
         $sheet->getStyle('H2:H' . ($row-1))->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_DATE_DDMMYYYY);
         $sheet->getStyle('N2:N' . ($row-1))->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_DATE_DATETIME);
-    }
-
-    // Aplicar bordes a toda la tabla
-    if ($row > 1) {
-        $tableRange = 'A1:' . $lastColumnLetter . ($row - 1); // Usar la variable corregida
-        $borderStyle = [
-            'borders' => [
-                'allBorders' => [
-                    'borderStyle' => Border::BORDER_THIN,
-                    'color' => ['rgb' => '000000']
-                ]
-            ]
-        ];
+        
+        // Aplicar bordes a toda la tabla con datos
+        $tableRange = 'A1:' . $lastColumnLetter . ($row - 1);
         $sheet->getStyle($tableRange)->applyFromArray($borderStyle);
+    } else {
+        // Si no hay datos, agregar una fila con mensaje informativo (opcional)
+        $sheet->setCellValue('A2', 'No hay datos disponibles');
+        $sheet->mergeCells('A2:' . $lastColumnLetter . '2');
+        $sheet->getStyle('A2')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('A2')->getFont()->setItalic(true);
     }
 
     // Crear el writer
@@ -213,6 +222,8 @@ try {
     header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     header('Content-Disposition: attachment;filename="' . $filename . '"');
     header('Cache-Control: max-age=0');
+    header('Pragma: public');
+    header('Expires: 0');
 
     // Limpiar cualquier salida previa
     ob_end_clean();

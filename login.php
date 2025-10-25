@@ -225,7 +225,7 @@ while ($empresaLog = mysqli_fetch_array($queryCompany)) {
     <div class="login-container">
         <div class="login-sidebar" style="position: relative;">
             <div class="login-logo">
-                <img src="./img/gift_flow_blanco.png" alt="Logo UTT" class="img-fluid pb-2">
+                <img src="./img/logos/logo_amigotex.png" alt="Logo Beneficios" class="img-fluid pb-2">
             </div>
 
             <p class="login-text text-white">Inicia sesión con tus credenciales para acceder al sistema</p>

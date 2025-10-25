@@ -177,82 +177,68 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $userEmail = $userData['email'];
             $userName = $userData['name'];
 
+            // Obtener el nombre del asesor (delivered_by)
+            $asesorQuery = $conn->prepare("SELECT nombre FROM users WHERE username = ?");
+            $asesorQuery->bind_param("s", $delivered_by);
+            $asesorQuery->execute();
+            $asesorResult = $asesorQuery->get_result();
+            $asesorName = '';
+            if ($asesorResult->num_rows > 0) {
+                $asesorData = $asesorResult->fetch_assoc();
+                $asesorName = $asesorData['nombre'];
+            }
+            $asesorQuery->close();
+
+            // Fecha y hora actual
+            $currentDateTime = date('Y-m-d H:i:s');
+
             // Solo intentar enviar correo si hay email válido
             if (!empty($userEmail) && filter_var($userEmail, FILTER_VALIDATE_EMAIL)) {
                 // Preparar contenido del correo
                 $subject = "🎁 Regalo Entregado - Beneficios Amgigotex";
                 $isSamePerson = ($recipient_number_id == $user_number_id);
+                $entregadoA = $isSamePerson ? 'usted mismo' : $recipient_name;
                 
-                if ($isSamePerson) {
-                    $message = "
-                    <html>
-                    <head>
-                        <style>
-                            body { font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px; }
-                            .container { max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-                            h1 { color: #333; text-align: center; }
-                            p { color: #555; line-height: 1.6; }
-                            .footer { margin-top: 20px; font-size: 12px; color: #999; text-align: center; }
-                            .gift-icon { font-size: 48px; text-align: center; margin: 20px 0; }
-                            .info-box { background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 15px 0; }
-                        </style>
-                    </head>
-                    <body>
-                        <div class='container'>
-                            <div class='gift-icon'>🎁</div>
-                            <h1>¡Felicidades, {$userName}!</h1>
-                            <p>Le informamos que su regalo ha sido entregado exitosamente. Usted mismo ha recibido el regalo directamente.</p>
-                            <div class='info-box'>
-                                <p><strong>Tipo de regalo:</strong> {$tipo_entrega}</p>
-                                <p><strong>Sede de entrega:</strong> {$sede}</p>
-                            </div>
-                            <p>Esperamos que disfrute su obsequio.</p>
-                            <div class='footer'>
-                                <p>Este es un mensaje automático, por favor no responda.</p>
-                                <p>© SYGNIA - Made by <span class='eagle-span'>Eagle Software</span></p>
-                            </div>
-                        </div>
-                    </body>
-                    </html>
-                    ";
-                } else {
-                    $message = "
-                    <html>
-                    <head>
-                        <style>
-                            body { font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px; }
-                            .container { max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-                            h1 { color: #333; text-align: center; }
-                            p { color: #555; line-height: 1.6; }
-                            .footer { margin-top: 20px; font-size: 12px; color: #999; text-align: center; }
-                            .gift-icon { font-size: 48px; text-align: center; margin: 20px 0; }
-                            .recipient-info { background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 15px 0; }
-                            .info-box { background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 15px 0; }
-                        </style>
-                    </head>
-                    <body>
-                        <div class='container'>
-                            <div class='gift-icon'>🎁</div>
-                            <h1>¡Felicidades, {$userName}!</h1>
-                            <p>Le informamos que su regalo ha sido entregado exitosamente.</p>
-                            <div class='recipient-info'>
-                                <p><strong>Entregado a:</strong> {$recipient_name}</p>
-                                <p>Esta persona ha sido autorizada por usted para recibir el regalo.</p>
-                            </div>
-                            <div class='info-box'>
-                                <p><strong>Tipo de regalo:</strong> {$tipo_entrega}</p>
-                                <p><strong>Sede de entrega:</strong> {$sede}</p>
-                            </div>
-                            <p>Esperamos que disfrute su obsequio.</p>
-                            <div class='footer'>
-                                <p>Este es un mensaje automático, por favor no responda.</p>
-                                <p>© SYGNIA - Made by <span class='eagle-span'>Eagle Software</span></p>
-                            </div>
-                        </div>
-                    </body>
-                    </html>
-                    ";
+                $message = "
+                <html>
+                <head>
+                    <style>
+                        body { font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px; }
+                        .container { max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+                        h1 { color: #333; text-align: center; }
+                        p { color: #555; line-height: 1.6; }
+                        .footer { margin-top: 20px; font-size: 12px; color: #999; text-align: center; }
+                        .gift-icon { font-size: 48px; text-align: center; margin: 20px 0; }
+                        .info-box { background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 15px 0; }
+                    </style>
+                </head>
+                <body>
+                    <div class='container'>
+                        <div class='gift-icon'>🎁</div>
+                        <h1>¡Felicidades, {$userName}!</h1>
+                        <p>¡Grandes noticias!</p>
+                        <p>Queremos confirmarte que ya hemos hecho efectivo tu beneficio {$tipo_entrega} del Regalo de Navidad 2025.</p>
+                        <p>Dicho Beneficio fue entregado a {$entregadoA} en la sede {$sede}, el día {$currentDateTime} por el(la) asesor(a) {$asesorName}.</p>
+                        <p>Este es un pequeno gesto para agradecerte por ser parte fundamental de nuestro fondo de empleados Amigotex. Tu esfuerzo y dedicación son los que hacen posible el éxito de nuestro Fondo.</p>
+                        <p>Deseamos que lo disfrutes y que esta temporada esté llena de alegría, paz y momentos inolvidables para ti y tu familia.</p>
+                        <p>¡Felices Fiestas!</p>";
+                
+                if (!$isSamePerson) {
+                    $message .= "
+                        <p>Esta persona ha sido autorizada por usted para recibir el regalo.</p>
+                        <p>{$recipient_name} con identificacion No. {$recipient_number_id}</p>";
                 }
+                
+                $message .= "
+                        <p>Esperamos que disfrute su obsequio.</p>
+                        <div class='footer'>
+                            <p>Este es un mensaje automático, por favor no responda.</p>
+                            <p>© SYGNIA - Made by <span class='eagle-span'>Eagle Software</span></p>
+                        </div>
+                    </div>
+                </body>
+                </html>
+                ";
 
                 // Enviar correo usando PHPMailer
                 try {
