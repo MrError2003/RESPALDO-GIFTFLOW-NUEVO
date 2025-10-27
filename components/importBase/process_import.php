@@ -49,6 +49,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['excel_file'])) {
                     continue;
                 }
 
+                // Verificar si ya tiene entrega este año
+                $checkDeliveryStmt = $conn->prepare("SELECT COUNT(*) FROM gf_gift_deliveries WHERE user_number_id = ? AND YEAR(reception_date) = YEAR(CURDATE())");
+                $checkDeliveryStmt->bind_param("i", $number_id);
+                $checkDeliveryStmt->execute();
+                $checkDeliveryStmt->bind_result($deliveryCount);
+                $checkDeliveryStmt->fetch();
+                $checkDeliveryStmt->close();
+
+                if ($deliveryCount > 0) {
+                    // Omitir este registro
+                    continue;
+                }
+
                 // Verificar si existe
                 $checkStmt = $conn->prepare("SELECT COUNT(*) FROM gf_users WHERE number_id = ?");
                 $checkStmt->bind_param("i", $number_id);

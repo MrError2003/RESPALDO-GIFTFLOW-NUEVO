@@ -195,7 +195,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Solo intentar enviar correo si hay email válido
             if (!empty($userEmail) && filter_var($userEmail, FILTER_VALIDATE_EMAIL)) {
                 // Preparar contenido del correo
-                $subject = "🎁 Regalo Entregado - Beneficios Amgigotex";
+                $subject = "🎁 Regalo Entregado - Beneficios Amigotex";
                 $isSamePerson = ($recipient_number_id == $user_number_id);
                 $entregadoA = $isSamePerson ? 'usted mismo' : $recipient_name;
                 
@@ -221,7 +221,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <p>Dicho Beneficio fue entregado a {$entregadoA} en la sede {$sede}, el día {$currentDateTime} por el(la) asesor(a) {$asesorName}.</p>
                         <p>Este es un pequeno gesto para agradecerte por ser parte fundamental de nuestro fondo de empleados Amigotex. Tu esfuerzo y dedicación son los que hacen posible el éxito de nuestro Fondo.</p>
                         <p>Deseamos que lo disfrutes y que esta temporada esté llena de alegría, paz y momentos inolvidables para ti y tu familia.</p>
-                        <p>¡Felices Fiestas!</p>";
+                        <p>¡Felices Fiestas!</p>
+                        <div style='text-align: center; margin-top: 20px;'>
+                            <img src='https://amigotex.com/wp-content/uploads/2021/10/Logo-40-anos_Mesa-de-trabajo-1-1536x612.png' alt='Logo 40 años' style='width: 200px; height: auto;'>
+                        </div>";
                 
                 if (!$isSamePerson) {
                     $message .= "
